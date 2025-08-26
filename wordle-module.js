@@ -57,6 +57,7 @@ module.exports.analyseWordle = (messages, offset) => {
     const today = new Date();
     const day = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) - offset * MS;
     const game = Math.ceil((day - start) / MS);
+    logger.log(game);
     return game;
   };
 
@@ -69,7 +70,7 @@ module.exports.analyseWordle = (messages, offset) => {
       ignore: 0,
       turns: []
     },
-    "🥕 Wortel": {
+    "Wortel": {
       day: getGameNo(Date.UTC(2022, 0, 31)),
       heading: '🥕',
       json: 'wortel',
@@ -120,6 +121,23 @@ module.exports.analyseWordle = (messages, offset) => {
       useBoard: false,
       ignore: 0,
       turns: []
+    },
+    "xDaaglikse Kwartel": {
+      day: getGameNo(Date.UTC(2022, 0, 24)),
+      heading: 'K',
+      json: 'kwartel',
+      useBoard: true,
+      ignore: 9999,
+      max: 10,
+      turns: []
+    },
+      "Obsessie": {
+      day: getGameNo(Date.UTC(2025, 6, 15)),
+      heading: '🌀',
+      json: 'obsessie',
+      useBoard: false,
+      ignore: 0,
+      turns: []
     }
   };
 
@@ -131,19 +149,21 @@ module.exports.analyseWordle = (messages, offset) => {
     }
     return score;
   }
-  const cleanedMessages = messages.replaceAll(' 🎉', '').replaceAll('🙂 ', '');
-  const re = /\[\d+\/\d+\/\d+, \d+:\d+:\d+\] ([A-Za-z é&]+): \s*([ ([A-Za-z 🥕]+) #?(\d,?\d+)( (\d)\/(\d))?([^\[]+)/gim;
+  const cleanedMessages = messages.replaceAll(' 🎉', '').replaceAll('🙂 ', '').replaceAll('🥕 ', '').replaceAll('🌀 ', '');
+ 
+  const re = /\[\d+\/\d+\/\d+, \d+:\d+:\d+\] ([A-Za-z é&]+): \s*([ ([A-Za-z ]+) #?([0-9,]+)( (\d)\/(\d))?([^\[]+)/gim;
   const matches = [...cleanedMessages.matchAll(re)];
 
   const players = matches
     .reduce((rv, x) => {
       let game = x[2];
-      let name = x[1];
+      let name = x[1].split(' ')[0];
       let day = parseInt(x[3].replaceAll(',', ''));
       let turns = parseInt(x[4]);
       let board = x[7];
       let g = games[game];
       if (g && g.day === day) {
+        logger.log(x);
         turns = Number.isNaN(turns) ? MAX : turns;
         turns = g.useBoard ? calcScore(board, g.max) : turns;
         const p = rv[name] ?? { games: {} };
@@ -161,16 +181,15 @@ module.exports.analyseWordle = (messages, offset) => {
     const g = games[n];
     g.medals = {};
     let medalCount = 0;
-    let medalIndex = -1;
+    let medalIndex = 0;
     let lastTurn = 0;
     for (let t of g.turns.sort((a, b) => a - b)) {
       if (t > lastTurn) {
-        medalIndex++;
-        if (medalIndex >= 3 || medalCount >= 3) break;
+        if (medalIndex >= 3) break;
         g.medals[t] = MEDALS[medalIndex];
       }
+      medalIndex++;
       lastTurn = t;
-      medalCount++;
     }
   }
 
