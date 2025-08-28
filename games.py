@@ -2,6 +2,7 @@ from datetime import date
 
 WORDLE = "Wordle"
 MAX = 100
+NO_MEDAL = 0
 BRONZE = 1
 SILVER = BRONZE * 100
 GOLD = SILVER * 100
@@ -9,12 +10,14 @@ MS = 86400000
 MEDALS = [GOLD, SILVER, BRONZE]
 
 MEDAL_SYMBOLS = {
+  NO_MEDAL: "",
   GOLD: '🥇',
   SILVER: '🥈',
   BRONZE: '🥉'
 };
 
 MEDAL_NAMES = {
+  NO_MEDAL: "",
   GOLD: 'G',
   SILVER: 'S',
   BRONZE: 'B'
@@ -47,7 +50,6 @@ games = {
       "heading": 'W',
       "json": 'wordle',
       "useBoard": False,
-      "ignore": 0,
       "turns": []
     },
     "Wortel": {
@@ -55,7 +57,6 @@ games = {
       "heading": '🥕',
       "json": 'wortel',
       "useBoard": False,
-      "ignore": 0,
       "turns": []
     },
     "Daily Quordle": {
@@ -63,7 +64,6 @@ games = {
       "heading": 'Q',
       "json": 'quordle',
       "useBoard": True,
-      "ignore": 0,
       "max": 10,
       "turns": []
     },
@@ -72,7 +72,6 @@ games = {
       "heading": 'SQ',
       "json": 'sequenceQuordle',
       "useBoard": True,
-      "ignore": 570,
       "max": 10,
       "turns": []
     },
@@ -81,8 +80,7 @@ games = {
       "heading": 'O',
       "json": 'octordle',
       "useBoard": True,
-      "ignore": 0,
-      "max": 16,
+      "max": 14,
       "turns": []
     },
     "Daily Sequence Octordle": {
@@ -92,14 +90,12 @@ games = {
       "useBoard": True,
       "max": 16,
       "turns": [],
-      "ignore": 570,
     },
     "nerdlegame": {
       "day": date(2022, 1, 19),
       "heading": 'N',
       "json": 'nerdle',
       "useBoard": False,
-      "ignore": 0,
       "turns": []
     },
     "Obsessie": {
@@ -107,7 +103,6 @@ games = {
       "heading": '🌀',
       "json": 'obsessie',
       "useBoard": False,
-      "ignore": 0,
       "turns": []
     }
 }

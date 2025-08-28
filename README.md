@@ -5,6 +5,7 @@ This is a set of Scriptable JavaScript scripts that can be used on an iPhone to 
 The supported games are:
 * Wordle
 * Wortel
+* Obsessie
 * Nerdle
 * Octordle
 * Sequence Octordle
@@ -12,3 +13,7 @@ The supported games are:
 * Sequence Quordle
 
 The Jupyter notebook analyses the data over a whole month and determines the overall winner for the month.
+
+## Update 2025-08-28
+
+wordle.py is a Python rewrite of the JavaScript code. It is intended to be run using Pythenista on iOS
