@@ -8,6 +8,7 @@ import os
 from unittest.mock import patch
 from datetime import date
 from wordle import (
+    daily_results_summary,
     load_chats,
     clean_chats,
     parse_plays,
@@ -76,7 +77,6 @@ class TestWordle(unittest.TestCase):
             ("Pete", "Q", 27),
             ("Pete", "SO", 79),
             ("Pete", "SQ", 22),
-            ("Pete", "W", 5),
             ("Pete", "🌀", 4),
         ]
         self.assertEqual(actual, expected)
@@ -121,7 +121,6 @@ class TestWordle(unittest.TestCase):
             ("Alan", "W", 3, 10000),
             ("Neil", "W", 4, 1),
             ("Michael", "W", 4, 1),
-            ("Pete", "W", 5, 0),
             ("Neil", "🌀", 4, 10000),
             ("Buzz", "🌀", 4, 10000),
             ("Pete", "🌀", 4, 10000),
@@ -139,8 +138,85 @@ class TestWordle(unittest.TestCase):
         actual.sort(key=lambda x: x["name"])
         for x in actual:
             x["day"] = str(x["day"])
-        
+
         self.assertEqual(actual, self.expected)
+
+    def test_day_results_per_player(self):
+        chats = clean_chats(self.chats)
+        plays = parse_plays(chats)
+        grouped_by_date_and_game = group_plays_by_date_and_game(plays)
+        assign_medals(grouped_by_date_and_game)
+        player_results = day_results_per_player(grouped_by_date_and_game)
+        end_date = date(2025, 8, 23)
+        actual = daily_results_summary(player_results, end_date)
+        expected = [
+            {
+                "O": "62🥉",
+                "Q": "22🥇",
+                "SO": "68🥈",
+                "SQ": "26",
+                "medals": "🥇🥇🥈🥉🥉",
+                "W": "4️⃣",
+                "N": "❎", 
+                "name": "Michael",
+                "🌀": "4️⃣",
+                "📅": 0,
+                "position": 4,
+            },
+            {
+                "N": "3️⃣",
+                "O": "61🥈",
+                "Q": "22🥇",
+                "SO": "66🥇",
+                "SQ": "23",
+                "medals": "🥇🥇🥇🥇🥈🥉",
+                "W": "4️⃣",
+                "name": "Neil",
+                "🌀": "4️⃣",
+                "📅": 1,
+                "position": 1,
+            },
+            {
+                "N": "3️⃣",
+                "O": "70",
+                "Q": "22🥇",
+                "SO": "71🥉",
+                "SQ": "19🥇",
+                "medals": "🥇🥇🥇🥇🥉",
+                "W": "3️⃣",
+                "name": "Alan",
+                "🌀": "5️⃣",
+                "📅": 0,
+                "position": 3,
+            },
+            {
+                "N": "4️⃣",
+                "O": "68",
+                "Q": "27",
+                "SO": "79",
+                "SQ": "22🥉",
+                "medals": "🥇🥉🥉",
+                "W": "❎",
+                "name": "Pete",
+                "🌀": "4️⃣",
+                "📅": 0,
+                "position": 5,
+            },
+            {
+                "N": "4️⃣",
+                "O": "59🥇",
+                "Q": "22🥇",
+                "SO": "74",
+                "SQ": "21🥈",
+                "medals": "🥇🥇🥇🥇🥈🥉",
+                "W": "3️⃣",
+                "name": "Buzz",
+                "🌀": "4️⃣",
+                "📅": 1,
+                "position": 1,
+            },
+        ]
+        self.assertCountEqual(actual, expected)
 
 
 if __name__ == "__main__":
