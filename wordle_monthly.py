@@ -1,7 +1,14 @@
 from datetime import date
 import appex
 import os
-from wordle import load_chats, clean_chats, parse_plays, group_plays_by_date_and_game, assign_medals, day_results_per_player
+from wordle import (
+    load_chats,
+    clean_chats,
+    parse_plays,
+    group_plays_by_date_and_game,
+    assign_medals,
+    day_results_per_player,
+)
 from ui import WebView
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -9,6 +16,7 @@ from datetime import date, timedelta
 
 start_date = date(2025, 8, 1)
 end_date = (start_date + timedelta(days=32)).replace(day=1)
+
 
 def main():
     if not appex.is_running_extension():
@@ -26,65 +34,52 @@ def main():
         assign_medals(grouped)
         persons = day_results_per_player(grouped)
 
-        rename = {
-            "octordleTurns":         "O turns",
-            "octordleMedal":         "O",
-            "sequenceOctordleTurns": "SO Turns",
-            "sequenceOctordleMedal": "SO",
-            "quordleTurns":          "Q Turns",
-            "quordleMedal":          "Q",
-            "sequenceQuordleTurns":  "SQ Turns",
-            "sequenceQuordleMedal":  "SQ",
-            "wordleTurns":           "W Turns",
-            "wordleMedal":           "W",
-            "obsessieTurns":         "🌀 Turns",
-            "obsessieMedal":         "🌀",
-            "wortelTurns":         "🥕 Turns",
-            "wortelMedal":         "🥕",
-            "nerdleTurns":           "N Turns",
-            "nerdleMedal":           "N",
-            "position":              "Won",
-        }
-
-        # load dataframe from json object
-        df = pd.DataFrame(persons).rename(columns=rename)
-
-        df['5G'] = df['golds']
-        df['6G'] = df['golds']
-        df['7G'] = df['golds']
+        df = pd.DataFrame(persons)
+        df["Won"] = df["position"]
 
         month = df[(df["day"] >= start_date) & (df["day"] < end_date)]
-        days = month.groupby("name").agg(
-            {
-                "Won": lambda x: (x == 1).sum(),
-            }
+
+        aggs = {
+            "Won": pd.NamedAgg(column="position", aggfunc=lambda x: (x == 1).sum()),
+            "W": pd.NamedAgg(column="wordleMedal", aggfunc=lambda x: (x == "G").sum()),
+            "🌀": pd.NamedAgg(
+                column="obsessieMedal", aggfunc=lambda x: (x == "G").sum()
+            ),
+            "🥕": pd.NamedAgg(column="wortelMedal", aggfunc=lambda x: (x == "G").sum()),
+            "N": pd.NamedAgg(column="nerdleMedal", aggfunc=lambda x: (x == "G").sum()),
+            "O": pd.NamedAgg(
+                column="octordleMedal", aggfunc=lambda x: (x == "G").sum()
+            ),
+            "SO": pd.NamedAgg(
+                column="sequenceOctordleMedal", aggfunc=lambda x: (x == "G").sum()
+            ),
+            "Q": pd.NamedAgg(column="quordleMedal", aggfunc=lambda x: (x == "G").sum()),
+            "SQ": pd.NamedAgg(
+                column="sequenceQuordleMedal", aggfunc=lambda x: (x == "G").sum()
+            ),
+            "5G": pd.NamedAgg(column="golds", aggfunc=lambda x: (x == 5).sum()),
+            "6G": pd.NamedAgg(column="golds", aggfunc=lambda x: (x == 6).sum()),
+            "7G": pd.NamedAgg(column="golds", aggfunc=lambda x: (x == 7).sum()),
+        }
+
+        per_game_stats = month.groupby("name", as_index=False).agg(
+            **{k: v for k, v in aggs.items() if v.column in df.columns}
         )
 
-        all = month.groupby("name", as_index=False).agg(
-            {
-                "Won": lambda x: (x == 1).sum(),
-                "W": lambda x: (x == "G").sum(),
-                "🌀": lambda x: (x == "G").sum(),
-                "N": lambda x: (x == "G").sum(),
-                "O": lambda x: (x == "G").sum(),
-                "SO": lambda x: (x == "G").sum(),
-                "Q": lambda x: (x == "G").sum(),
-                "SQ": lambda x: (x == "G").sum(),
-                "5G": lambda x: (x == 5).sum(),
-                "6G": lambda x: (x == 6).sum(),
-                "7G": lambda x: (x == 7).sum(),                
-            }
+        month_wins = (
+            month.groupby("name")
+            .agg(
+                {
+                    "Won": lambda x: (x == 1).sum(),
+                }
+            )
+            .sort_values(by=["Won"], ascending=False)
         )
-
-        # show output as table
-        print(all.to_string(index=False))
-
-        sorted = days.sort_values(by=["Won"], ascending=False)
-        sorted.plot(kind="bar", rot=0)
+        month_wins.plot(kind="bar", rot=0)
         plt.xlabel("")
         plt.show()
 
-        TEMPLATE = '''
+        TEMPLATE = """
         <!doctype html>
         <html>
         <head>
@@ -95,13 +90,14 @@ def main():
         </head>
         <body class="rendered_html">{{CONTENT}}</body>
         </html>
-        '''
+        """
 
-        html = TEMPLATE.replace('{{CONTENT}}', all.to_html(index=False))
+        html = TEMPLATE.replace("{{CONTENT}}", per_game_stats.to_html(index=False))
 
         webview = WebView(name=str(date))
         webview.load_html(html)
         webview.present(hide_close_button=True)
+
 
 if __name__ == "__main__":
     main()
